@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chromebook Info Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 40px; }
+        #scanBtn { padding: 12px 28px; font-size: 1.2em; cursor: pointer; }
+        #info { margin-top: 30px; background: #fff; padding: 20px; border-radius: 8px; display: inline-block; min-width: 300px; }
+        .label { font-weight: bold; }
+        .section { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Chromebook Info Scanner</h1>
+    <button id="scanBtn">Scan My Chromebook</button>
+    <div id="info"></div>
+
+    <script>
+        async function getStorageInfo() {
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                const estimate = await navigator.storage.estimate();
+                return {
+                    quota: estimate.quota,
+                    usage: estimate.usage
+                };
+            }
+            return null;
+        }
+
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let model = "Unknown";
+            if (ua.includes("CrOS")) {
+                const match = ua.match(/CrOS [^ ]+ ([^ ]+)/);
+                if (match) model = match[1];
+            }
+            return {
+                userAgent: ua,
+                model: model,
+                platform: navigator.platform,
+                language: navigator.language,
+                languages: navigator.languages ? navigator.languages.join(', ') : '',
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                deviceMemory: navigator.deviceMemory || 'Unknown',
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                vendor: navigator.vendor
+            };
+        }
+
+        async function getIPInfo() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return data.ip;
+            } catch {
+                return "Unavailable";
+            }
+        }
+
+        function getConnectionInfo() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!conn) return null;
+            return {
+                effectiveType: conn.effectiveType,
+                downlink: conn.downlink,
+                rtt: conn.rtt,
+                saveData: conn.saveData
+            };
+        }
+
+        function getWifiInfo() {
+            // Browsers do not expose WiFi SSID or signal for privacy reasons.
+            // We can only show connection type if available.
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!conn) return "Unavailable";
+            return conn.type ? conn.type : "Unavailable";
+        }
+
+        function getScreenInfo() {
+            return {
+                width: screen.width,
+                height: screen.height,
+                availWidth: screen.availWidth,
+                availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth,
+                pixelDepth: screen.pixelDepth
+            };
+        }
+
+        function getTimezone() {
+            try {
+                return Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch {
+                return "Unknown";
+            }
+        }
+
+        function getLocationInfo() {
+            return new Promise((resolve) => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        pos => resolve({
+                            latitude: pos.coords.latitude,
+                            longitude: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        }),
+                        () => resolve(null),
+                        {timeout: 5000}
+                    );
+                } else {
+                    resolve(null);
+                }
+            });
+        }
+
+        document.getElementById('scanBtn').onclick = async function() {
+            const infoDiv = document.getElementById('info');
+            infoDiv.innerHTML = "<b>Scanning...</b>";
+
+            const device = getDeviceInfo();
+            const storage = await getStorageInfo();
+            const ip = await getIPInfo();
+            const connection = getConnectionInfo();
+            const wifiType = getWifiInfo();
+            const screenInfo = getScreenInfo();
+            const timezone = getTimezone();
+            const location = await getLocationInfo();
+
+            let html = `<h2>Scan Results</h2>`;
+
+            html += `<div class="section"><span class="label">Chromebook Model:</span> ${device.model}<br>`;
+            html += `<span class="label">User Agent:</span> ${device.userAgent}<br>`;
+            html += `<span class="label">Platform:</span> ${device.platform}<br>`;
+            html += `<span class="label">Vendor:</span> ${device.vendor}<br>`;
+            html += `<span class="label">Language:</span> ${device.language}<br>`;
+            html += `<span class="label">Languages:</span> ${device.languages}<br>`;
+            html += `<span class="label">CPU Cores:</span> ${device.hardwareConcurrency}<br>`;
+            html += `<span class="label">Device Memory:</span> ${device.deviceMemory} GB<br>`;
+            html += `<span class="label">Cookies Enabled:</span> ${device.cookieEnabled ? "Yes" : "No"}<br>`;
+            html += `<span class="label">Do Not Track:</span> ${device.doNotTrack}<br></div>`;
+
+            html += `<div class="section"><span class="label">IP Address:</span> ${ip}<br>`;
+            html += `<span class="label">Timezone:</span> ${timezone}<br></div>`;
+
+            if (storage) {
+                const gb = 1024 * 1024 * 1024;
+                html += `<div class="section"><span class="label">Total Storage:</span> ${(storage.quota/gb).toFixed(2)} GB<br>`;
+                html += `<span class="label">Used Storage:</span> ${(storage.usage/gb).toFixed(2)} GB<br>`;
+                html += `<span class="label">Free Storage:</span> ${((storage.quota-storage.usage)/gb).toFixed(2)} GB<br></div>`;
+            } else {
+                html += `<div class="section"><span class="label">Storage Info:</span> Not available<br></div>`;
+            }
+
+            html += `<div class="section"><span class="label">Screen Size:</span> ${screenInfo.width}x${screenInfo.height}<br>`;
+            html += `<span class="label">Available Screen:</span> ${screenInfo.availWidth}x${screenInfo.availHeight}<br>`;
+            html += `<span class="label">Color Depth:</span> ${screenInfo.colorDepth}<br>`;
+            html += `<span class="label">Pixel Depth:</span> ${screenInfo.pixelDepth}<br></div>`;
+
+            html += `<div class="section"><span class="label">Connection Type:</span> ${wifiType}<br>`;
+            if (connection) {
+                html += `<span class="label">Effective Type:</span> ${connection.effectiveType}<br>`;
+                html += `<span class="label">Downlink:</span> ${connection.downlink} Mbps<br>`;
+                html += `<span class="label">RTT:</span> ${connection.rtt} ms<br>`;
+                html += `<span class="label">Save Data:</span> ${connection.saveData ? "Yes" : "No"}<br>`;
+            }
+            html += `</div>`;
+
+            html += `<div class="section"><span class="label">Online:</span> ${navigator.onLine ? "Yes" : "No"}<br>`;
+            html += `<span class="label">Battery:</span> <span id="batteryInfo">Checking...</span><br></div>`;
+
+            if (location) {
+                html += `<div class="section"><span class="label">Location:</span> ${location.latitude}, ${location.longitude} (Accuracy: ${location.accuracy}m)<br></div>`;
+            } else {
+                html += `<div class="section"><span class="label">Location:</span> Not available or denied<br></div>`;
+            }
+
+            infoDiv.innerHTML = html;
+
+            // Battery info
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    document.getElementById('batteryInfo').innerText =
+                        `${(battery.level*100).toFixed(0)}% ${battery.charging ? "(Charging)" : ""}`;
+                });
+            } else {
+                document.getElementById('batteryInfo').innerText = "Not available";
+            }
+        };
+    </script>
+</body>
+</html>
