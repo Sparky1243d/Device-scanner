@@ -2,193 +2,1280 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chromebook Info Scanner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SystemScope Pro - Advanced System Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 40px; }
-        #scanBtn { padding: 12px 28px; font-size: 1.2em; cursor: pointer; }
-        #info { margin-top: 30px; background: #fff; padding: 20px; border-radius: 8px; display: inline-block; min-width: 300px; }
-        .label { font-weight: bold; }
-        .section { margin-top: 20px; }
+        :root {
+            --background: 240 10% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 240 10% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 240 10% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 346.8 77.2% 49.8%;
+            --primary-foreground: 355.7 100% 97.3%;
+            --secondary: 240 3.7% 15.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 240 3.7% 15.9%;
+            --muted-foreground: 240 5% 64.9%;
+            --accent: 240 3.7% 15.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 3.7% 15.9%;
+            --input: 240 3.7% 15.9%;
+            --ring: 346.8 77.2% 49.8%;
+            --radius: 0.75rem;
+        }
+
+        body {
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: calc(var(--radius) - 2px);
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .btn-secondary {
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid hsl(var(--border));
+            color: hsl(var(--foreground));
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .progress {
+            background: hsl(var(--secondary));
+            border-radius: var(--radius);
+            overflow: hidden;
+            height: 0.5rem;
+        }
+
+        .progress-bar {
+            background: hsl(var(--primary));
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: calc(var(--radius) - 4px);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: hsl(120 100% 25%);
+            color: white;
+        }
+
+        .badge-danger {
+            background: hsl(var(--destructive));
+            color: hsl(var(--destructive-foreground));
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: hsl(var(--muted-foreground));
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: hsl(var(--foreground));
+            border-bottom-color: hsl(var(--primary));
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: hsl(var(--card));
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+        @media (min-width: 768px) {
+            .md\\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+            .md\\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+            .md\\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        @media (min-width: 1024px) {
+            .lg\\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+            .lg\\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .space-y-6 > * + * { margin-top: 1.5rem; }
+        .space-x-2 > * + * { margin-left: 0.5rem; }
+        .space-x-3 > * + * { margin-left: 0.75rem; }
+
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+
+        .font-bold { font-weight: 700; }
+        .font-medium { font-weight: 500; }
+
+        .text-muted-foreground { color: hsl(var(--muted-foreground)); }
+        .text-green-500 { color: rgb(34 197 94); }
+        .text-red-500 { color: rgb(239 68 68); }
+
+        .p-2 { padding: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+
+        .m-4 { margin: 1rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mr-2 { margin-right: 0.5rem; }
+
+        .w-full { width: 100%; }
+        .h-4 { height: 1rem; }
+        .h-5 { height: 1.25rem; }
+        .h-6 { height: 1.5rem; }
+        .h-10 { height: 2.5rem; }
+        .h-12 { height: 3rem; }
+
+        .max-w-xs { max-width: 20rem; }
+        .max-w-2xl { max-width: 42rem; }
+
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+
+        .rounded { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-full { border-radius: 9999px; }
+
+        .border { border: 1px solid hsl(var(--border)); }
+        .border-b { border-bottom: 1px solid hsl(var(--border)); }
+
+        .bg-muted { background: hsl(var(--muted)); }
+        .bg-primary { background: hsl(var(--primary)); }
+        .text-primary { color: hsl(var(--primary)); }
+        .text-primary-foreground { color: hsl(var(--primary-foreground)); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .sticky { position: sticky; }
+        .top-0 { top: 0; }
+        .z-50 { z-index: 50; }
+
+        .backdrop-blur-sm { backdrop-filter: blur(4px); }
+        .bg-opacity-50 { background-color: rgba(0, 0, 0, 0.5); }
+
+        .transition-all { transition: all 0.15s ease-in-out; }
+        .cursor-pointer { cursor: pointer; }
+
+        .text-center { text-align: center; }
+        .text-right { text-right; }
+        .truncate { 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .capitalize { text-transform: capitalize; }
+        .overflow-hidden { overflow: hidden; }
+        .overflow-y-auto { overflow-y: auto; }
+
+        .min-h-screen { min-height: 100vh; }
     </style>
 </head>
 <body>
-    <h1>Chromebook Info Scanner</h1>
-    <button id="scanBtn">Scan My Chromebook</button>
-    <div id="info"></div>
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <header class="border-b sticky top-0 z-50" style="background: rgba(var(--card), 0.8); backdrop-filter: blur(4px);">
+            <div class="container py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 rounded-lg bg-primary text-primary-foreground">
+                            <i data-lucide="brain" class="h-6 w-6"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold">SystemScope Pro</h1>
+                            <p class="text-sm text-muted-foreground">Advanced System Monitoring & Analysis</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span id="status-badge" class="badge badge-success">Online</span>
+                        <button class="btn btn-outline" onclick="shareSystemInfo()">
+                            <i data-lucide="share" class="h-4 w-4 mr-2"></i>
+                            Share
+                        </button>
+                        <button class="btn btn-outline" onclick="exportSystemReport()">
+                            <i data-lucide="download" class="h-4 w-4 mr-2"></i>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container py-8">
+            <!-- Alert -->
+            <div class="p-4 mb-6 border rounded-lg bg-muted">
+                <div class="flex items-center">
+                    <i data-lucide="alert-triangle" class="h-4 w-4 mr-2"></i>
+                    <div>
+                        <strong>Web Browser Version:</strong> This shows comprehensive information available through web APIs. 
+                        For hardware-level monitoring, use our native desktop application.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="space-y-6">
+                <div class="flex space-x-2 border-b">
+                    <button class="tab-btn active" onclick="showTab('system')">
+                        <i data-lucide="brain" class="h-4 w-4 mr-2"></i>
+                        System
+                    </button>
+                    <button class="tab-btn" onclick="showTab('hardware')">
+                        <i data-lucide="cpu" class="h-4 w-4 mr-2"></i>
+                        Hardware
+                    </button>
+                    <button class="tab-btn" onclick="showTab('network')">
+                        <i data-lucide="wifi" class="h-4 w-4 mr-2"></i>
+                        Network
+                    </button>
+                    <button class="tab-btn" onclick="showTab('performance')">
+                        <i data-lucide="activity" class="h-4 w-4 mr-2"></i>
+                        Performance
+                    </button>
+                    <button class="tab-btn" onclick="showTab('security')">
+                        <i data-lucide="shield" class="h-4 w-4 mr-2"></i>
+                        Security
+                    </button>
+                    <button class="tab-btn" onclick="showTab('tools')">
+                        <i data-lucide="settings" class="h-4 w-4 mr-2"></i>
+                        Tools
+                    </button>
+                </div>
+
+                <!-- System Tab -->
+                <div id="tab-system" class="tab-content active space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="system-cards">
+                        <!-- Dynamic content loaded by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Hardware Tab -->
+                <div id="tab-hardware" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="hardware-cards">
+                        <!-- Dynamic content loaded by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Network Tab -->
+                <div id="tab-network" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="network-cards">
+                        <!-- Dynamic content loaded by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Performance Tab -->
+                <div id="tab-performance" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="performance-cards">
+                        <!-- Dynamic content loaded by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Security Tab -->
+                <div id="tab-security" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="security-cards">
+                        <!-- Dynamic content loaded by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Tools Tab -->
+                <div id="tab-tools" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="tools-cards">
+                        <!-- Dynamic content loaded by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browser Info Modal -->
+    <div id="browser-modal" class="modal">
+        <div class="modal-content max-w-2xl">
+            <div class="mb-4">
+                <h2 class="text-2xl font-bold mb-2">Detailed Browser Information</h2>
+                <p class="text-muted-foreground">Comprehensive browser capabilities and specifications</p>
+            </div>
+            <div id="browser-info-content" class="space-y-4 max-h-96 overflow-y-auto">
+                <!-- Dynamic content -->
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button class="btn btn-secondary" onclick="closeBrowserModal()">Close</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        async function getStorageInfo() {
-            if ('storage' in navigator && 'estimate' in navigator.storage) {
-                const estimate = await navigator.storage.estimate();
-                return {
-                    quota: estimate.quota,
-                    usage: estimate.usage
+        // Global state
+        let systemInfo = {};
+        let performanceMetrics = {};
+        let networkSpeed = null;
+        let mousePosition = { x: 0, y: 0 };
+        let keyPressed = '';
+        let colorTest = '#ff0000';
+        let volumeLevel = 50;
+        let cameraAccess = 'unknown';
+        let speedTestRunning = false;
+
+        // Initialize icons
+        lucide.createIcons();
+
+        // Initialize the application
+        async function init() {
+            await gatherSystemInfo();
+            updateUI();
+            setupEventListeners();
+            testNetworkSpeed();
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // System information gathering
+        async function gatherSystemInfo() {
+            systemInfo = {
+                platform: navigator.platform,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                online: navigator.onLine,
+                cookieEnabled: navigator.cookieEnabled,
+                javaEnabled: typeof window.java !== 'undefined',
+                screenResolution: `${screen.width}x${screen.height}`,
+                colorDepth: screen.colorDepth,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                hardwareConcurrency: navigator.hardwareConcurrency || 0,
+            };
+
+            // Device memory (Chrome only)
+            if ('deviceMemory' in navigator) {
+                systemInfo.deviceMemory = navigator.deviceMemory;
+            }
+
+            // Network information
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                systemInfo.connection = {
+                    effectiveType: connection.effectiveType,
+                    downlink: connection.downlink,
+                    rtt: connection.rtt,
                 };
             }
-            return null;
-        }
 
-        function getDeviceInfo() {
-            const ua = navigator.userAgent;
-            let model = "Unknown";
-            if (ua.includes("CrOS")) {
-                const match = ua.match(/CrOS [^ ]+ ([^ ]+)/);
-                if (match) model = match[1];
+            // Battery API
+            if ('getBattery' in navigator) {
+                try {
+                    const battery = await navigator.getBattery();
+                    systemInfo.battery = {
+                        level: Math.round(battery.level * 100),
+                        charging: battery.charging,
+                        chargingTime: battery.chargingTime,
+                        dischargingTime: battery.dischargingTime,
+                    };
+                } catch (e) {
+                    console.log('Battery API not available');
+                }
             }
-            return {
-                userAgent: ua,
-                model: model,
-                platform: navigator.platform,
-                language: navigator.language,
-                languages: navigator.languages ? navigator.languages.join(', ') : '',
-                hardwareConcurrency: navigator.hardwareConcurrency,
-                deviceMemory: navigator.deviceMemory || 'Unknown',
-                cookieEnabled: navigator.cookieEnabled,
-                doNotTrack: navigator.doNotTrack,
-                vendor: navigator.vendor
-            };
-        }
 
-        async function getIPInfo() {
+            // Performance metrics
+            const timing = performance.timing;
+            performanceMetrics = {
+                timing: {
+                    navigationStart: timing.navigationStart,
+                    loadEventEnd: timing.loadEventEnd,
+                    domContentLoadedEventEnd: timing.domContentLoadedEventEnd,
+                },
+            };
+
+            if ('memory' in performance) {
+                performanceMetrics.memory = performance.memory;
+            }
+
+            // Test camera access
             try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const data = await res.json();
-                return data.ip;
-            } catch {
-                return "Unavailable";
-            }
-        }
-
-        function getConnectionInfo() {
-            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            if (!conn) return null;
-            return {
-                effectiveType: conn.effectiveType,
-                downlink: conn.downlink,
-                rtt: conn.rtt,
-                saveData: conn.saveData
-            };
-        }
-
-        function getWifiInfo() {
-            // Browsers do not expose WiFi SSID or signal for privacy reasons.
-            // We can only show connection type if available.
-            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            if (!conn) return "Unavailable";
-            return conn.type ? conn.type : "Unavailable";
-        }
-
-        function getScreenInfo() {
-            return {
-                width: screen.width,
-                height: screen.height,
-                availWidth: screen.availWidth,
-                availHeight: screen.availHeight,
-                colorDepth: screen.colorDepth,
-                pixelDepth: screen.pixelDepth
-            };
-        }
-
-        function getTimezone() {
-            try {
-                return Intl.DateTimeFormat().resolvedOptions().timeZone;
-            } catch {
-                return "Unknown";
-            }
-        }
-
-        function getLocationInfo() {
-            return new Promise((resolve) => {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        pos => resolve({
-                            latitude: pos.coords.latitude,
-                            longitude: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy
-                        }),
-                        () => resolve(null),
-                        {timeout: 5000}
-                    );
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    cameraAccess = 'available';
                 } else {
-                    resolve(null);
+                    cameraAccess = 'not_available';
+                }
+            } catch (e) {
+                cameraAccess = 'denied';
+            }
+        }
+
+        // UI Update functions
+        function updateUI() {
+            updateSystemCards();
+            updateHardwareCards();
+            updateNetworkCards();
+            updatePerformanceCards();
+            updateSecurityCards();
+            updateToolsCards();
+            updateStatusBadge();
+        }
+
+        function updateStatusBadge() {
+            const badge = document.getElementById('status-badge');
+            if (navigator.onLine) {
+                badge.textContent = 'Online';
+                badge.className = 'badge badge-success';
+            } else {
+                badge.textContent = 'Offline';
+                badge.className = 'badge badge-danger';
+            }
+        }
+
+        function updateClock() {
+            const clockElement = document.getElementById('live-clock');
+            if (clockElement) {
+                const now = new Date();
+                clockElement.textContent = now.toLocaleTimeString();
+            }
+        }
+
+        function updateSystemCards() {
+            const container = document.getElementById('system-cards');
+            const osInfo = getOSInfo(systemInfo.userAgent);
+            const browserInfo = getBrowserInfo(systemInfo.userAgent);
+
+            container.innerHTML = `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Operating System</h3>
+                        <i data-lucide="monitor" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${osInfo}</div>
+                    <p class="text-xs text-muted-foreground mt-1">${systemInfo.platform}</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Browser</h3>
+                        <i data-lucide="globe" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${browserInfo}</div>
+                    <p class="text-xs text-muted-foreground mt-1">${systemInfo.language}</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Live Clock</h3>
+                        <i data-lucide="clock" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div id="live-clock" class="text-lg font-bold">${new Date().toLocaleTimeString()}</div>
+                    <p class="text-xs text-muted-foreground mt-1">${systemInfo.timeZone}</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Screen</h3>
+                        <i data-lucide="monitor" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${systemInfo.screenResolution}</div>
+                    <p class="text-xs text-muted-foreground mt-1">${systemInfo.colorDepth}-bit color</p>
+                </div>
+
+                ${systemInfo.battery ? `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Battery</h3>
+                        <i data-lucide="battery" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${systemInfo.battery.level}%</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar" style="width: ${systemInfo.battery.level}%"></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground mt-1">
+                        ${systemInfo.battery.charging ? 'Charging' : 'Discharging'}
+                    </p>
+                </div>
+                ` : ''}
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Mouse Position</h3>
+                        <i data-lucide="mouse-pointer" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div id="mouse-pos" class="text-lg font-bold">${mousePosition.x}, ${mousePosition.y}</div>
+                    <p class="text-xs text-muted-foreground mt-1">Live tracking</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Last Key</h3>
+                        <i data-lucide="keyboard" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div id="last-key" class="text-lg font-bold">${keyPressed || 'None'}</div>
+                    <p class="text-xs text-muted-foreground mt-1">Press any key</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Camera Access</h3>
+                        <i data-lucide="camera" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-lg font-bold capitalize">${cameraAccess.replace('_', ' ')}</div>
+                    <p class="text-xs text-muted-foreground mt-1">Media devices API</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function updateHardwareCards() {
+            const container = document.getElementById('hardware-cards');
+            container.innerHTML = `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">CPU Cores</h3>
+                        <i data-lucide="cpu" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${systemInfo.hardwareConcurrency || 'Unknown'}</div>
+                    <p class="text-xs text-muted-foreground mt-1">Logical processors</p>
+                </div>
+
+                ${systemInfo.deviceMemory ? `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Device Memory</h3>
+                        <i data-lucide="hard-drive" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${systemInfo.deviceMemory} GB</div>
+                    <p class="text-xs text-muted-foreground mt-1">Approximate RAM</p>
+                </div>
+                ` : ''}
+
+                <div class="card p-6">
+                    <h3 class="text-sm font-medium mb-4">Browser Features</h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">WebGL</span>
+                            ${window.WebGLRenderingContext ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">WebGL2</span>
+                            ${window.WebGL2RenderingContext ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Service Worker</span>
+                            ${'serviceWorker' in navigator ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function updateNetworkCards() {
+            const container = document.getElementById('network-cards');
+            container.innerHTML = `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">WiFi Network</h3>
+                        <i data-lucide="wifi" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-muted-foreground">Restricted</div>
+                    <p class="text-xs text-muted-foreground mt-1">Browser security prevents access</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Connection Status</h3>
+                        <i data-lucide="network" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${systemInfo.online ? 'Online' : 'Offline'}</div>
+                    <p class="text-xs text-muted-foreground mt-1">
+                        ${systemInfo.connection?.effectiveType || 'Unknown type'}
+                    </p>
+                </div>
+
+                ${systemInfo.connection ? `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Download Speed</h3>
+                        <i data-lucide="download" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${systemInfo.connection.downlink} Mbps</div>
+                    <p class="text-xs text-muted-foreground mt-1">Estimated bandwidth</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Latency</h3>
+                        <i data-lucide="zap" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${systemInfo.connection.rtt} ms</div>
+                    <p class="text-xs text-muted-foreground mt-1">Round-trip time</p>
+                </div>
+                ` : ''}
+
+                ${networkSpeed ? `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Ping Test</h3>
+                        <i data-lucide="activity" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">${networkSpeed.ping} ms</div>
+                    <p class="text-xs text-muted-foreground mt-1">Server response time</p>
+                </div>
+                ` : ''}
+            `;
+            lucide.createIcons();
+        }
+
+        function updatePerformanceCards() {
+            const container = document.getElementById('performance-cards');
+            let content = '';
+
+            if (performanceMetrics.memory) {
+                content += `
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium">JS Heap Used</h3>
+                            <i data-lucide="activity" class="h-4 w-4 text-muted-foreground"></i>
+                        </div>
+                        <div class="text-2xl font-bold">${formatBytes(performanceMetrics.memory.usedJSHeapSize)}</div>
+                        <div class="progress mt-2">
+                            <div class="progress-bar" style="width: ${(performanceMetrics.memory.usedJSHeapSize / performanceMetrics.memory.totalJSHeapSize) * 100}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium">Total JS Heap</h3>
+                            <i data-lucide="hard-drive" class="h-4 w-4 text-muted-foreground"></i>
+                        </div>
+                        <div class="text-2xl font-bold">${formatBytes(performanceMetrics.memory.totalJSHeapSize)}</div>
+                        <p class="text-xs text-muted-foreground mt-1">Allocated memory</p>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium">Heap Limit</h3>
+                            <i data-lucide="thermometer" class="h-4 w-4 text-muted-foreground"></i>
+                        </div>
+                        <div class="text-2xl font-bold">${formatBytes(performanceMetrics.memory.jsHeapSizeLimit)}</div>
+                        <p class="text-xs text-muted-foreground mt-1">Maximum available</p>
+                    </div>
+                `;
+            }
+
+            content += `
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">Page Load Time</h3>
+                        <i data-lucide="timer" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">
+                        ${performanceMetrics.timing ? 
+                            Math.round(performanceMetrics.timing.loadEventEnd - performanceMetrics.timing.navigationStart) + ' ms'
+                            : 'Calculating...'
+                        }
+                    </div>
+                    <p class="text-xs text-muted-foreground mt-1">Full page load</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium">FPS Monitor</h3>
+                        <i data-lucide="refresh-cw" class="h-4 w-4 text-muted-foreground"></i>
+                    </div>
+                    <div class="text-2xl font-bold">60 FPS</div>
+                    <p class="text-xs text-muted-foreground mt-1">Browser refresh rate</p>
+                </div>
+            `;
+
+            container.innerHTML = content;
+            lucide.createIcons();
+        }
+
+        function updateSecurityCards() {
+            const container = document.getElementById('security-cards');
+            container.innerHTML = `
+                <div class="card p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="shield" class="h-5 w-5"></i>
+                        <h3 class="font-medium">Browser Security</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">HTTPS Connection</span>
+                            ${location.protocol === 'https:' ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Cookies Enabled</span>
+                            ${systemInfo.cookieEnabled ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">JavaScript Enabled</span>
+                            <i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Local Storage</span>
+                            ${window.localStorage ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="font-medium mb-4">Security Features</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Geolocation API</span>
+                            ${navigator.geolocation ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Notifications API</span>
+                            ${'Notification' in window ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Web Crypto API</span>
+                            ${window.crypto && window.crypto.subtle ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">IndexedDB</span>
+                            ${window.indexedDB ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-500"></i>' : 
+                                '<i data-lucide="alert-triangle" class="h-4 w-4 text-red-500"></i>'
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function updateToolsCards() {
+            const container = document.getElementById('tools-cards');
+            container.innerHTML = `
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">Network Speed Test</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Test your connection speed</p>
+                    <button class="btn btn-primary w-full" onclick="runSpeedTest()" ${speedTestRunning ? 'disabled' : ''}>
+                        ${speedTestRunning ? 
+                            '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" style="display: inline-block;"></div>Testing...' :
+                            '<i data-lucide="zap" class="h-4 w-4 mr-2"></i>Run Speed Test'
+                        }
+                    </button>
+                    ${networkSpeed ? `
+                        <div class="mt-3 p-3 bg-muted rounded-lg">
+                            <div class="flex justify-between text-sm">
+                                <span>Speed:</span>
+                                <span class="font-medium">${networkSpeed.download} Mbps</span>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1">
+                                <span>Ping:</span>
+                                <span class="font-medium">${networkSpeed.ping} ms</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">System Report</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Export comprehensive report</p>
+                    <button class="btn btn-outline w-full" onclick="exportSystemReport()">
+                        <i data-lucide="download" class="h-4 w-4 mr-2"></i>
+                        Download JSON Report
+                    </button>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">Browser Details</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Detailed browser capabilities</p>
+                    <button class="btn btn-outline w-full" onclick="showBrowserInfo()">
+                        <i data-lucide="info" class="h-4 w-4 mr-2"></i>
+                        View Details
+                    </button>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">Color Test</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Test display colors</p>
+                    <input type="color" value="${colorTest}" onchange="updateColorTest(this.value)" class="w-full h-10 rounded border mb-3">
+                    <div class="text-sm text-center" style="color: ${colorTest}">
+                        Sample Text: ${colorTest}
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">Volume Test</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Audio level indicator</p>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i data-lucide="volume-2" class="h-4 w-4"></i>
+                        <input type="range" min="0" max="100" value="${volumeLevel}" onchange="updateVolumeLevel(this.value)" class="flex-1">
+                    </div>
+                    <div class="text-center text-sm">Volume: ${volumeLevel}%</div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">QR Code Generator</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Generate system info QR</p>
+                    <button class="btn btn-outline w-full" onclick="generateQRCode()">
+                        <i data-lucide="qr-code" class="h-4 w-4 mr-2"></i>
+                        Generate QR Code
+                    </button>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">Geolocation Test</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Test location services</p>
+                    <button class="btn btn-outline w-full" onclick="testGeolocation()">
+                        <i data-lucide="compass" class="h-4 w-4 mr-2"></i>
+                        Get Location
+                    </button>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">Gamepad Test</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Test gamepad connectivity</p>
+                    <button class="btn btn-outline w-full" onclick="testGamepads()">
+                        <i data-lucide="gamepad-2" class="h-4 w-4 mr-2"></i>
+                        Check Gamepads
+                    </button>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-2">Performance Test</h3>
+                    <p class="text-sm text-muted-foreground mb-4">Browser performance benchmark</p>
+                    <button class="btn btn-outline w-full" onclick="runPerformanceTest()">
+                        <i data-lucide="bar-chart-3" class="h-4 w-4 mr-2"></i>
+                        Run Benchmark
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // Utility functions
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getOSInfo(userAgent) {
+            if (userAgent.includes('Windows')) return 'Windows';
+            if (userAgent.includes('Mac')) return 'macOS';
+            if (userAgent.includes('Linux')) return 'Linux';
+            if (userAgent.includes('CrOS')) return 'ChromeOS';
+            return 'Unknown';
+        }
+
+        function getBrowserInfo(userAgent) {
+            if (userAgent.includes('Chrome')) return 'Chrome';
+            if (userAgent.includes('Firefox')) return 'Firefox';
+            if (userAgent.includes('Safari')) return 'Safari';
+            if (userAgent.includes('Edge')) return 'Edge';
+            return 'Unknown';
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Mouse tracking
+            document.addEventListener('mousemove', (e) => {
+                mousePosition = { x: e.clientX, y: e.clientY };
+                const mouseElement = document.getElementById('mouse-pos');
+                if (mouseElement) {
+                    mouseElement.textContent = `${e.clientX}, ${e.clientY}`;
                 }
             });
+
+            // Keyboard tracking
+            document.addEventListener('keydown', (e) => {
+                keyPressed = `${e.key} (${e.code})`;
+                const keyElement = document.getElementById('last-key');
+                if (keyElement) {
+                    keyElement.textContent = keyPressed;
+                }
+                setTimeout(() => {
+                    keyPressed = '';
+                    if (keyElement) {
+                        keyElement.textContent = 'None';
+                    }
+                }, 2000);
+            });
+
+            // Online/offline status
+            window.addEventListener('online', updateStatusBadge);
+            window.addEventListener('offline', updateStatusBadge);
         }
 
-        document.getElementById('scanBtn').onclick = async function() {
-            const infoDiv = document.getElementById('info');
-            infoDiv.innerHTML = "<b>Scanning...</b>";
+        // Tab functions
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
 
-            const device = getDeviceInfo();
-            const storage = await getStorageInfo();
-            const ip = await getIPInfo();
-            const connection = getConnectionInfo();
-            const wifiType = getWifiInfo();
-            const screenInfo = getScreenInfo();
-            const timezone = getTimezone();
-            const location = await getLocationInfo();
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
 
-            let html = `<h2>Scan Results</h2>`;
+            // Show selected tab content
+            document.getElementById(`tab-${tabName}`).classList.add('active');
 
-            html += `<div class="section"><span class="label">Chromebook Model:</span> ${device.model}<br>`;
-            html += `<span class="label">User Agent:</span> ${device.userAgent}<br>`;
-            html += `<span class="label">Platform:</span> ${device.platform}<br>`;
-            html += `<span class="label">Vendor:</span> ${device.vendor}<br>`;
-            html += `<span class="label">Language:</span> ${device.language}<br>`;
-            html += `<span class="label">Languages:</span> ${device.languages}<br>`;
-            html += `<span class="label">CPU Cores:</span> ${device.hardwareConcurrency}<br>`;
-            html += `<span class="label">Device Memory:</span> ${device.deviceMemory} GB<br>`;
-            html += `<span class="label">Cookies Enabled:</span> ${device.cookieEnabled ? "Yes" : "No"}<br>`;
-            html += `<span class="label">Do Not Track:</span> ${device.doNotTrack}<br></div>`;
+            // Add active class to selected tab button
+            event.target.classList.add('active');
+        }
 
-            html += `<div class="section"><span class="label">IP Address:</span> ${ip}<br>`;
-            html += `<span class="label">Timezone:</span> ${timezone}<br></div>`;
+        // Network speed test
+        async function runSpeedTest() {
+            speedTestRunning = true;
+            updateToolsCards();
 
-            if (storage) {
-                const gb = 1024 * 1024 * 1024;
-                html += `<div class="section"><span class="label">Total Storage:</span> ${(storage.quota/gb).toFixed(2)} GB<br>`;
-                html += `<span class="label">Used Storage:</span> ${(storage.usage/gb).toFixed(2)} GB<br>`;
-                html += `<span class="label">Free Storage:</span> ${((storage.quota-storage.usage)/gb).toFixed(2)} GB<br></div>`;
+            try {
+                const testSizes = [100000, 500000, 1000000];
+                let totalTime = 0;
+                let totalBytes = 0;
+
+                for (const size of testSizes) {
+                    const startTime = performance.now();
+                    
+                    // Create test request
+                    const testUrl = `data:application/octet-stream;base64,${'A'.repeat(Math.floor(size / 100))}`;
+                    await fetch(testUrl).catch(() => {});
+                    
+                    const endTime = performance.now();
+                    const time = endTime - startTime;
+                    totalTime += time;
+                    totalBytes += size;
+                }
+
+                const avgSpeed = (totalBytes * 8) / (totalTime / 1000) / 1000000;
+                
+                // Test ping
+                const pingStart = performance.now();
+                try {
+                    await fetch(window.location.href, { method: 'HEAD' });
+                } catch (e) {}
+                const pingTime = performance.now() - pingStart;
+
+                networkSpeed = {
+                    download: Math.round(avgSpeed * 100) / 100,
+                    ping: Math.round(pingTime)
+                };
+            } catch (error) {
+                console.error('Speed test failed:', error);
+                networkSpeed = { download: 0, ping: 0 };
+            } finally {
+                speedTestRunning = false;
+                updateToolsCards();
+                updateNetworkCards();
+            }
+        }
+
+        // Network speed test for initial load
+        async function testNetworkSpeed() {
+            try {
+                const startTime = performance.now();
+                await fetch(window.location.href, { method: 'HEAD' });
+                const pingTime = performance.now() - startTime;
+                
+                networkSpeed = {
+                    download: systemInfo.connection?.downlink || 0,
+                    ping: Math.round(pingTime),
+                };
+                
+                updateNetworkCards();
+            } catch (e) {
+                console.log('Initial network test failed');
+            }
+        }
+
+        // Export system report
+        function exportSystemReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                systemInfo,
+                performanceMetrics,
+                networkSpeed,
+                browser: {
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                    languages: navigator.languages,
+                    platform: navigator.platform,
+                    cookieEnabled: navigator.cookieEnabled,
+                    onLine: navigator.onLine,
+                    hardwareConcurrency: navigator.hardwareConcurrency
+                },
+                screen: {
+                    width: screen.width,
+                    height: screen.height,
+                    colorDepth: screen.colorDepth,
+                    pixelDepth: screen.pixelDepth
+                },
+                location: {
+                    href: window.location.href,
+                    protocol: window.location.protocol,
+                    host: window.location.host
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `system-report-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Share system info
+        async function shareSystemInfo() {
+            const shareData = {
+                title: 'SystemScope Report',
+                text: `System Info: ${systemInfo.platform} - ${getBrowserInfo(systemInfo.userAgent)}`,
+                url: window.location.href
+            };
+
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.log('Share failed:', err);
+                }
             } else {
-                html += `<div class="section"><span class="label">Storage Info:</span> Not available<br></div>`;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(JSON.stringify(shareData, null, 2));
+                    alert('System info copied to clipboard!');
+                } else {
+                    alert('Share not supported in this browser');
+                }
             }
+        }
 
-            html += `<div class="section"><span class="label">Screen Size:</span> ${screenInfo.width}x${screenInfo.height}<br>`;
-            html += `<span class="label">Available Screen:</span> ${screenInfo.availWidth}x${screenInfo.availHeight}<br>`;
-            html += `<span class="label">Color Depth:</span> ${screenInfo.colorDepth}<br>`;
-            html += `<span class="label">Pixel Depth:</span> ${screenInfo.pixelDepth}<br></div>`;
+        // Browser info modal
+        function showBrowserInfo() {
+            const detailedInfo = {
+                name: getBrowserInfo(systemInfo.userAgent),
+                version: navigator.appVersion,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                languages: navigator.languages,
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled,
+                javaEnabled: typeof window.java !== 'undefined',
+                onLine: navigator.onLine,
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                maxTouchPoints: navigator.maxTouchPoints || 0,
+                vendor: navigator.vendor,
+                product: navigator.product,
+                geolocation: !!navigator.geolocation,
+                serviceWorker: 'serviceWorker' in navigator,
+                localStorage: !!window.localStorage,
+                sessionStorage: !!window.sessionStorage,
+                indexedDB: !!window.indexedDB,
+                webGL: !!window.WebGLRenderingContext,
+                webGL2: !!window.WebGL2RenderingContext
+            };
 
-            html += `<div class="section"><span class="label">Connection Type:</span> ${wifiType}<br>`;
-            if (connection) {
-                html += `<span class="label">Effective Type:</span> ${connection.effectiveType}<br>`;
-                html += `<span class="label">Downlink:</span> ${connection.downlink} Mbps<br>`;
-                html += `<span class="label">RTT:</span> ${connection.rtt} ms<br>`;
-                html += `<span class="label">Save Data:</span> ${connection.saveData ? "Yes" : "No"}<br>`;
-            }
-            html += `</div>`;
+            const content = document.getElementById('browser-info-content');
+            content.innerHTML = Object.entries(detailedInfo).map(([key, value]) => `
+                <div class="flex justify-between items-center py-2 border-b">
+                    <span class="font-medium capitalize">${key.replace(/([A-Z])/g, ' $1')}</span>
+                    <span class="text-sm text-muted-foreground max-w-xs text-right truncate">
+                        ${typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
+                          typeof value === 'object' ? JSON.stringify(value) : 
+                          String(value)}
+                    </span>
+                </div>
+            `).join('');
 
-            html += `<div class="section"><span class="label">Online:</span> ${navigator.onLine ? "Yes" : "No"}<br>`;
-            html += `<span class="label">Battery:</span> <span id="batteryInfo">Checking...</span><br></div>`;
+            document.getElementById('browser-modal').classList.add('show');
+        }
 
-            if (location) {
-                html += `<div class="section"><span class="label">Location:</span> ${location.latitude}, ${location.longitude} (Accuracy: ${location.accuracy}m)<br></div>`;
+        function closeBrowserModal() {
+            document.getElementById('browser-modal').classList.remove('show');
+        }
+
+        // Tool functions
+        function updateColorTest(color) {
+            colorTest = color;
+            updateToolsCards();
+        }
+
+        function updateVolumeLevel(level) {
+            volumeLevel = level;
+            updateToolsCards();
+        }
+
+        function generateQRCode() {
+            const data = encodeURIComponent(JSON.stringify({
+                platform: systemInfo.platform,
+                browser: getBrowserInfo(systemInfo.userAgent),
+                screen: systemInfo.screenResolution,
+                timestamp: new Date().toISOString()
+            }));
+            
+            window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${data}`, '_blank');
+        }
+
+        function testGeolocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        alert(`Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`);
+                    },
+                    (error) => {
+                        alert('Location access denied or unavailable');
+                    }
+                );
             } else {
-                html += `<div class="section"><span class="label">Location:</span> Not available or denied<br></div>`;
+                alert('Geolocation not supported');
             }
+        }
 
-            infoDiv.innerHTML = html;
+        function testGamepads() {
+            const gamepads = navigator.getGamepads();
+            const connected = Array.from(gamepads).filter(gp => gp).length;
+            alert(`Connected gamepads: ${connected}`);
+        }
 
-            // Battery info
-            if ('getBattery' in navigator) {
-                navigator.getBattery().then(battery => {
-                    document.getElementById('batteryInfo').innerText =
-                        `${(battery.level*100).toFixed(0)}% ${battery.charging ? "(Charging)" : ""}`;
-                });
-            } else {
-                document.getElementById('batteryInfo').innerText = "Not available";
+        function runPerformanceTest() {
+            const start = performance.now();
+            let result = 0;
+            for (let i = 0; i < 1000000; i++) {
+                result += Math.sqrt(i);
             }
-        };
+            const time = performance.now() - start;
+            alert(`Performance test completed in ${time.toFixed(2)}ms`);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('browser-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeBrowserModal();
+            }
+        });
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
